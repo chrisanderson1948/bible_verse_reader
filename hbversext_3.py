@@ -4,11 +4,12 @@ from tkinter import ttk, font
 from tkinter import filedialog
 import regex
 from ctypes import windll
+
 windll.shcore.SetProcessDpiAwareness(1)
 
 r = regex.compile(r"\d+")  # set up regex to look for digits in the lines of text
 s = regex.compile("xxxx  Chapter")  # set up regex to find chapter number & verses number
-part_fp = "C:\\Users\\44779\\OneDrive\\biblical hebrew\\Genesis Analysis\\"  # directory for verse files
+# part_fp = "C:\\Users\\44779\\OneDrive\\biblical hebrew\\Genesis Analysis\\"  # directory for verse files
 
 
 class HbVExtract(tk.Tk):
@@ -28,6 +29,7 @@ class UserInputFrame(ttk.Frame):
         self.v_begin = tk.IntVar()
         self.v_end = tk.IntVar()
         self.v_total = tk.IntVar()
+        self.outfile_dir = tk.StringVar()
         bk_entry = tk.Entry(self, textvariable=self.book_entry)
         bk_entry.grid(row=0, column=1, sticky="W", padx=15, pady=5)
         book_label = ttk.Label(self, text="Select Book")
@@ -62,8 +64,10 @@ class UserInputFrame(ttk.Frame):
 
     def show_book(self):
         a = filedialog.askopenfilename()  # create list from filepath
+        b = filedialog.askdirectory()  # create directory for output files
         # select filename.txt, a[1], and remove the .txt extension
         self.book_entry.set(a)  # set book_entry to required book
+        self.outfile_dir.set(b)  # write directory string for output files to outfile_dir
 
     def get_verse_total(self):
         with io.open(self.book_entry.get(), "r", encoding="UTF-8") as f:  # open book file
@@ -77,7 +81,7 @@ class UserInputFrame(ttk.Frame):
                     self.vbeg_sp_box.config(to=z[1])
                     self.vend_sp_box.config(to=z[1])
 
-    def validate_vend(self): # check that last verse number is not less than the first verse number
+    def validate_vend(self):  # check that last verse number is not less than the first verse number
         if self.v_end.get() >= self.v_begin.get():
             self.fgen_button["state"] = "normal"
         else:
@@ -93,12 +97,13 @@ class UserInputFrame(ttk.Frame):
                 t = r.findall(bk_text[i])  # extract current chapter and verse
                 if t == [str(verse), self.chapter.get()]:  # test to see these are the requested ones
                     txt2save = regex.findall(r"\w+", bk_text[i])  # if so save verse
-                    filename = part_fp + bk_title + "_" + self.chapter.get() + "_" + str(verse) + ".txt"
-                    with open(filename, 'a', encoding="utf-8") as f:  # open a file for output
+                    filename = self.outfile_dir.get()+ "/" + bk_title + "_" + \
+                               self.chapter.get() + "_" + str(verse) + ".txt "
+                    with open(filename, 'a', encoding="UTF-8") as f:  # open a file for output
                         f.write('\n'.join(txt2save))  # write data one word/line, to produce a column
 
 
 root = HbVExtract()
 font.nametofont("TkDefaultFont").configure(size=15)
-ttk.Button(root, text="exit", command=root.destroy).pack()
+ttk.Button(root, text="Exit", command=root.destroy).pack()
 root.mainloop()
